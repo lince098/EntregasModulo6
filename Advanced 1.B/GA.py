@@ -61,7 +61,7 @@ def mutate(individual, mutationRate, **params):
 def mutate_max_range(individual, mutationRate, **params):
     for swapped in range(len(individual)):
         if (random.random() < mutationRate):
-            chosen = int(random.random() * params['max_range'])
+            chosen = int(random.random() * params['range_of_mutation'])
             if random.random() < 0.5:
                 swapWith = (swapped - chosen) % len(individual)
             else:
@@ -75,21 +75,21 @@ def mutate_max_range(individual, mutationRate, **params):
     return individual
 
 
-def mutate_inverse_generation(individual, mutationRate, **params):
-    max_range = params['generation'] / params['max_generations']
-    for swapped in range(len(individual)):
-        if (random.random() < mutationRate):
-            chosen = int(random.random() * max_range)
-            if random.random() < 0.5:
-                swapWith = (swapped - chosen) % len(individual)
-            else:
-                swapWith = (swapped + chosen) % len(individual)
+def mutate_range_inverse_generation(individual, mutationRate, **params):
+    if params['max_range_inverse'] >= 1:    
+        for swapped in range(len(individual)):
+            if (random.random() < mutationRate):
+                chosen = int(random.random() * params['max_range_inverse'])
+                if random.random() < 0.5:
+                    swapWith = (swapped - chosen) % len(individual)
+                else:
+                    swapWith = (swapped + chosen) % len(individual)
 
-            city1 = individual[swapped]
-            city2 = individual[swapWith]
+                city1 = individual[swapped]
+                city2 = individual[swapWith]
 
-            individual[swapped] = city2
-            individual[swapWith] = city1
+                individual[swapped] = city2
+                individual[swapWith] = city1
     return individual
 
 
@@ -181,7 +181,9 @@ class genetic_algorithm_class():
             previous_population)
         tournament_size = max(
             1, int(self.population_size * self.tournament_proportion))
-
+        
+        max_range_inverse = (1 - generation /self.generations) * len(sorted_by_fitness_population[0])
+        
         for i in range(self.population_size - self.elite_size):
             father = select_by_tournament(sorted_by_fitness_population,
                                           tournament_size,
@@ -193,9 +195,9 @@ class genetic_algorithm_class():
             individual = self.crossover(father, mother)
             individual = self.mutate(individual,
                                      self.mutation_rate,
-                                     max_range=self.range_of_mutation,
+                                     range_of_mutation=self.range_of_mutation,
                                      generation=generation,
-                                     max_generations=self.generations)
+                                     max_range_inverse=max_range_inverse)
             next_generation.append(individual)
 
         if self.elite_size > 0:
